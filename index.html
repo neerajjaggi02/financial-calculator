@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Total Financial Freedom App</title>
+    
+    <!-- Chart.js for the Graph -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- html2pdf for PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --whatsapp: #25D366;
+            --pdf-btn: #475569;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            display: grid;
+            gap: 24px;
+            grid-template-columns: 1fr;
+        }
+        @media (min-width: 1024px) {
+            .container {
+                grid-template-columns: 400px 1fr;
+            }
+        }
+        .card {
+            background: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            margin-bottom: 24px;
+        }
+        h2 { margin-top: 0; font-size: 1.25rem; color: var(--text-main); border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+        .optional-badge { font-size: 0.8rem; background: #e2e8f0; padding: 2px 8px; border-radius: 12px; font-weight: normal; color: #64748b; vertical-align: middle; margin-left: 8px;}
+        .input-group { margin-bottom: 16px; }
+        
+        .label-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        label { font-weight: 500; font-size: 0.9rem; color: var(--text-muted); margin: 0; }
+        
+        select { padding: 4px 8px; border-radius: 4px; border: 1px solid #cbd5e1; font-size: 0.85rem; background: #f8fafc; color: var(--text-main); cursor: pointer; outline: none; }
+        select:focus { border-color: var(--primary); }
+
+        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 1rem; box-sizing: border-box; }
+        input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); }
+        
+        .radio-toggle { display: flex; gap: 16px; margin-bottom: 16px; padding: 12px; background: #f1f5f9; border-radius: 8px; border: 1px solid #e2e8f0; }
+        .radio-label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-main); font-weight: 500;}
+        .radio-label input { width: auto; margin: 0; cursor: pointer; }
+        
+        .itemized-container { background: #f8fafc; padding: 16px; border-radius: 8px; border: 1px dashed #cbd5e1; margin-bottom: 16px; display: none; }
+        .itemized-container .input-group { margin-bottom: 12px; }
+        .itemized-container input { padding: 8px; font-size: 0.95rem; }
+        .itemized-sum { text-align: right; font-weight: 600; color: var(--primary); margin-top: 12px; padding-top: 12px; border-top: 1px solid #cbd5e1; }
+
+        .btn-primary { width: 100%; background-color: var(--primary); color: white; border: none; padding: 16px; border-radius: 8px; font-size: 1.1rem; font-weight: 600; cursor: pointer; position: sticky; bottom: 20px; z-index: 10; box-shadow: 0 4px 12px rgba(37,99,235,0.3); }
+        .btn-primary:hover { background-color: #1d4ed8; }
+        
+        .action-buttons { display: flex; gap: 12px; margin-top: 20px; }
+        .btn-action { flex: 1; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s;}
+        .btn-whatsapp { background-color: var(--whatsapp); }
+        .btn-whatsapp:hover { background-color: #1ea952; }
+        .btn-pdf { background-color: var(--pdf-btn); }
+        .btn-pdf:hover { background-color: #334155; }
+
+        .results-card { background: var(--text-main); color: white; padding: 32px; } /* Increased padding for PDF aesthetics */
+        .results-card h2 { color: white; border-bottom-color: #334155; }
+        
+        .cashflow-waterfall { background: #0f172a; padding: 16px; border-radius: 8px; margin-bottom: 24px; }
+        .flow-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #334155; font-size: 0.95rem; }
+        .flow-row:last-child { border-bottom: none; font-weight: bold; font-size: 1.1rem; color: var(--success); padding-top: 12px;}
+        .flow-negative { color: var(--danger); }
+        .flow-prepayment { color: #38bdf8; font-weight: 500; }
+        .flow-investments { color: #a78bfa; font-weight: 500; }
+        
+        .metrics-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+        .metric { padding-bottom: 8px; border-bottom: 1px solid #334155; }
+        .metric-title { font-size: 0.875rem; color: #94a3b8; margin-bottom: 4px; }
+        .metric-value { font-size: 1.25rem; font-weight: 600; }
+        .highlight { color: var(--success); font-size: 1.5rem; }
+        
+        .insights-box { background: #fffbeb; color: #92400e; padding: 16px; border-radius: 8px; border: 1px solid #fcd34d; margin-bottom: 24px; display: none; }
+        .insights-box h3 { margin-top: 0; color: #b45309; font-size: 1.1rem; margin-bottom: 12px; }
+        .insights-box ul { margin: 0; padding-left: 20px; font-size: 0.95rem; line-height: 1.5; }
+        .insights-box li { margin-bottom: 8px; }
+        .insights-box li:last-child { margin-bottom: 0; }
+
+        .chart-container { position: relative; height: 350px; width: 100%; background: white; border-radius: 8px; padding: 12px; box-sizing: border-box; }
+        
+        /* Utility class to hide the PDF-generated image initially */
+        #pdf-chart-img { display: none; width: 100%; height: auto; border-radius: 8px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- Left Column: Inputs -->
+    <div>
+        <div class="card">
+            <h2>1. Cashflow & Household</h2>
+            <div class="input-group"><label>Monthly In-Hand Income (₹)</label><input type="number" id="income" value="180000"></div>
+            <div class="radio-toggle">
+                <label class="radio-label"><input type="radio" name="expenseMode" value="total" checked onchange="toggleExpenseMode()"> Enter Total</label>
+                <label class="radio-label"><input type="radio" name="expenseMode" value="itemized" onchange="toggleExpenseMode()"> Itemize Expenses</label>
+            </div>
+            <div class="input-group" id="totalExpenseDiv"><label>Total Household Expenses (₹)</label><input type="number" id="expenses" value="55000"></div>
+            <div class="itemized-container" id="itemizedExpenseDiv">
+                <div class="input-group"><label>Rent / Maintenance (₹)</label><input type="number" id="expRent" class="expense-item" value="20000" oninput="calculateItemizedSum()"></div>
+                <div class="input-group"><label>School Fees (₹)</label><input type="number" id="expSchool" class="expense-item" value="5000" oninput="calculateItemizedSum()"></div>
+                <div class="input-group"><label>Maid / Grocery (₹)</label><input type="number" id="expGrocery" class="expense-item" value="15000" oninput="calculateItemizedSum()"></div>
+                <div class="input-group"><label>Food Orders & Dining (₹)</label><input type="number" id="expDining" class="expense-item" value="7000" oninput="calculateItemizedSum()"></div>
+                <div class="input-group"><label>Kids / Gifts / Misc (₹)</label><input type="number" id="expMisc" class="expense-item" value="8000" oninput="calculateItemizedSum()"></div>
+                <div class="itemized-sum">Calculated Total: ₹ <span id="autoSumDisplay">55,000</span></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>2. Primary Home Loan</h2>
+            <div class="input-group"><label>Outstanding Principal (₹)</label><input type="number" id="principal" value="4000000"></div>
+            <div class="input-group"><label>Annual Interest Rate (%)</label><input type="number" id="rate" step="0.1" value="8.5"></div>
+            <div class="input-group">
+                <div class="label-row">
+                    <label>Remaining Tenure</label>
+                    <select id="tenureType" onchange="updateTenurePlaceholder()">
+                        <option value="emis">EMIs Left (Months)</option>
+                        <option value="years">Years</option>
+                    </select>
+                </div>
+                <input type="number" id="tenureValue" value="240">
+            </div>
+            <div class="input-group" style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                <label style="color: var(--primary); font-weight: 600;">Monthly Extra Prepayment (₹)</label>
+                <input type="number" id="manualExtra" value="15000" style="border-color: var(--primary); background: #eff6ff;">
+            </div>
+            <div class="input-group">
+                <label style="color: var(--success); font-weight: 600;">Yearly Bonus Prepayment (₹/yr)</label>
+                <input type="number" id="annualBonus" value="0" placeholder="e.g. 50000 every December">
+            </div>
+        </div>
+
+        <div class="card" style="background: #fdf2f8; border: 1px solid #fbcfe8;">
+            <h2>2b. Other Debt <span class="optional-badge">Optional</span></h2>
+            <div class="input-group"><label>Remaining Balance (₹)</label><input type="number" id="debt2Principal" value="0"></div>
+            <div class="input-group"><label>Interest Rate (%)</label><input type="number" id="debt2Rate" value="12" step="0.1"></div>
+            <div class="input-group"><label>Current EMI (₹)</label><input type="number" id="debt2Emi" value="0"></div>
+        </div>
+
+        <div class="card">
+            <h2>3. Holiday / Goal Planner</h2>
+            <div class="input-group">
+                <label>Goal Name</label>
+                <input type="text" id="goalName" value="Malaysia Family Trip">
+            </div>
+            <div class="input-group">
+                <label>Total Target Budget (₹)</label>
+                <input type="number" id="goalCost" value="250000">
+            </div>
+            <div class="input-group">
+                <label>Months Until Goal</label>
+                <input type="number" id="goalMonths" value="10">
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>4. Personal Investments</h2>
+            <div class="input-group">
+                <label>Monthly SIPs, Mutual Funds, Stocks, PPF (₹)</label>
+                <input type="number" id="investments" value="15000">
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="runFinancialEngine()">Run Financial Engine</button>
+    </div>
+
+    <!-- Right Column: Output Dashboard (This is what gets printed) -->
+    <div class="card results-card" id="results" style="opacity: 0.5;">
+        <h2 id="report-title">Your Financial Blueprint</h2>
+        
+        <div class="insights-box" id="insightsPanel">
+            <h3>💡 Financial Coach Insights</h3>
+            <ul id="insightsList"></ul>
+        </div>
+
+        <div class="cashflow-waterfall">
+            <div class="flow-row"><span>Monthly Income</span> <span id="out-income">₹ 0</span></div>
+            <div class="flow-row"><span>Household Expenses</span> <span class="flow-negative" id="out-expenses">- ₹ 0</span></div>
+            <div class="flow-row"><span>Home Loan EMI</span> <span class="flow-negative" id="out-emi">- ₹ 0</span></div>
+            <div class="flow-row" id="row-debt2" style="display:none;"><span>Other Loan EMI</span> <span class="flow-negative" id="out-debt2">- ₹ 0</span></div>
+            <div class="flow-row"><span>Holiday Sinking Fund</span> <span class="flow-negative" id="out-holiday">- ₹ 0</span></div>
+            <div class="flow-row"><span class="flow-prepayment">Extra Loan Prepayment</span> <span class="flow-prepayment" id="out-extra">- ₹ 0</span></div>
+            <div class="flow-row"><span class="flow-investments">Personal Investments</span> <span class="flow-investments" id="out-investments">- ₹ 0</span></div>
+            <div class="flow-row"><span>True Cash In Hand</span> <span id="out-leftover">₹ 0</span></div>
+        </div>
+        
+        <div class="metrics-grid">
+            <div class="metric"><div class="metric-title">Original Home Loan Finish Line</div><div class="metric-value" id="base-tenure">--</div></div>
+            <div class="metric"><div class="metric-title">New Accelerated Finish Line</div><div class="metric-value" id="acc-tenure">--</div></div>
+            <div class="metric"><div class="metric-title">Total Time Saved</div><div class="metric-value highlight" id="time-saved">--</div></div>
+            <div class="metric"><div class="metric-title">Total Interest Saved</div><div class="metric-value highlight" id="money-saved">₹ 0</div></div>
+        </div>
+
+        <!-- The Chart Container handles the swapping trick for PDFs -->
+        <div class="chart-container" id="chartWrapper">
+            <canvas id="loanChart"></canvas>
+            <img id="pdf-chart-img" src="" alt="Chart Image for PDF">
+        </div>
+
+        <!-- Action Buttons (Hidden during PDF generation) -->
+        <div class="action-buttons" id="export-buttons">
+            <button class="btn-action btn-whatsapp" onclick="shareViaWhatsApp()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.057 3.965L0 16l4.204-1.102a7.933 7.933 0 0 0 3.79.965h.004c4.368 0 7.926-3.558 7.93-7.93A7.898 7.898 0 0 0 13.6 2.326zM7.994 14.521a6.573 6.573 0 0 1-3.356-.92l-.24-.144-2.494.654.666-2.433-.156-.251a6.56 6.56 0 0 1-1.007-3.505c0-3.626 2.957-6.584 6.591-6.584a6.56 6.56 0 0 1 4.66 1.931 6.557 6.557 0 0 1 1.928 4.66c-.004 3.639-2.961 6.592-6.592 6.592zm3.615-4.934c-.197-.099-1.17-.578-1.353-.646-.182-.065-.315-.099-.445.099-.133.197-.513.646-.627.775-.114.133-.232.148-.43.05-.197-.1-.836-.308-1.592-.985-.59-.525-.985-1.175-1.103-1.372-.114-.198-.011-.304.088-.403.087-.088.197-.232.296-.346.1-.114.133-.198.198-.33.065-.134.034-.248-.015-.347-.05-.099-.445-1.076-.612-1.47-.16-.389-.323-.335-.445-.34-.114-.007-.247-.007-.38-.007a.729.729 0 0 0-.529.247c-.182.198-.691.677-.691 1.654 0 .977.71 1.916.81 2.049.098.133 1.394 2.132 3.383 2.992.47.205.84.326 1.129.418.475.152.904.129 1.246.08.38-.058 1.171-.48 1.338-.943.164-.464.164-.86.114-.943-.049-.084-.182-.133-.38-.232z"/>
+                </svg>
+                WhatsApp
+            </button>
+            <button class="btn-action btn-pdf" onclick="downloadPDF()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16">
+                  <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                  <path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/>
+                </svg>
+                Download PDF
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    let loanChartInstance = null;
+
+    function toggleExpenseMode() {
+        const mode = document.querySelector('input[name="expenseMode"]:checked').value;
+        document.getElementById('totalExpenseDiv').style.display = mode === 'total' ? 'block' : 'none';
+        document.getElementById('itemizedExpenseDiv').style.display = mode === 'itemized' ? 'block' : 'none';
+        if (mode === 'itemized') calculateItemizedSum(); 
+    }
+
+    function calculateItemizedSum() {
+        let sum = 0;
+        document.querySelectorAll('.expense-item').forEach(item => { sum += parseFloat(item.value) || 0; });
+        document.getElementById('autoSumDisplay').innerText = formatCurrency(sum);
+        return sum; 
+    }
+
+    function updateTenurePlaceholder() {
+        const type = document.getElementById('tenureType').value;
+        const input = document.getElementById('tenureValue');
+        if (type === 'emis') {
+            input.placeholder = "e.g., 185";
+            if (input.value <= 30) input.value = input.value * 12;
+        } else {
+            input.placeholder = "e.g., 20";
+            if (input.value > 30) input.value = Math.round(input.value / 12);
+        }
+    }
+
+    function formatCurrency(amount) { return new Intl.NumberFormat('en-IN').format(Math.round(amount)); }
+
+    function generateInsights(income, leftover, expenseMode, manualExtra, principal, annualRate, tenureMonths, baseEmi, debt2Principal, debt2Rate) {
+        const insightsList = document.getElementById('insightsList');
+        const insightsPanel = document.getElementById('insightsPanel');
+        insightsList.innerHTML = '';
+        let insights = [];
+
+        if (leftover < 0) insights.push("🚨 <strong>Deficit Warning:</strong> You are spending more than you earn. Temporarily pause your holiday fund or reduce extra prepayments.");
+
+        if (principal > 0 && annualRate > 0 && tenureMonths > 0) {
+            const stressRate = (annualRate + 1.5) / 12 / 100;
+            const stressEmi = (principal * stressRate * Math.pow(1 + stressRate, tenureMonths)) / (Math.pow(1 + stressRate, tenureMonths) - 1);
+            const emiDiff = stressEmi - baseEmi;
+            if (leftover < emiDiff) {
+                insights.push(`📊 <strong>Stress Test FAILED:</strong> If the RBI raises rates by 1.5%, your EMI will jump by ₹${formatCurrency(emiDiff)}. Your current cash buffer cannot handle this!`);
+            } else {
+                insights.push(`📊 <strong>Stress Test Passed:</strong> If rates jump by 1.5%, your EMI will rise by ₹${formatCurrency(emiDiff)}. Your current cash flow is strong enough to absorb this shock.`);
+            }
+        }
+
+        if (debt2Principal > 0 && manualExtra > 0) {
+            if (debt2Rate > annualRate) {
+                insights.push(`❄️ <strong>Debt Avalanche:</strong> Stop prepaying your Home Loan! Your secondary debt charges ${debt2Rate}%. Route your extra cash there first to save the maximum amount of money.`);
+            }
+        }
+
+        if (expenseMode === 'itemized') {
+            const dining = parseFloat(document.getElementById('expDining').value) || 0;
+            if (income > 0 && (dining / income) > 0.04) {
+                insights.push(`🍔 <strong>Expense Leak:</strong> You are spending ₹${formatCurrency(dining)} on dining. Cutting this by half adds ₹${formatCurrency(dining/2)} directly to your investments.`);
+            }
+        }
+
+        if (insights.length > 0) {
+            insights.forEach(text => {
+                const li = document.createElement('li'); li.innerHTML = text;
+                insightsList.appendChild(li);
+            });
+            insightsPanel.style.display = 'block';
+        } else {
+            insightsPanel.style.display = 'none';
+        }
+    }
+
+    function runFinancialEngine() {
+        const income = parseFloat(document.getElementById('income').value) || 0;
+        const expenseMode = document.querySelector('input[name="expenseMode"]:checked').value;
+        const expenses = expenseMode === 'total' ? (parseFloat(document.getElementById('expenses').value) || 0) : calculateItemizedSum(); 
+        
+        const principal = parseFloat(document.getElementById('principal').value) || 0;
+        const annualRate = parseFloat(document.getElementById('rate').value) || 0;
+        const tenureValue = parseFloat(document.getElementById('tenureValue').value) || 0;
+        const tenureType = document.getElementById('tenureType').value;
+        const manualExtra = parseFloat(document.getElementById('manualExtra').value) || 0;
+        const annualBonus = parseFloat(document.getElementById('annualBonus').value) || 0;
+        
+        const debt2Principal = parseFloat(document.getElementById('debt2Principal').value) || 0;
+        const debt2Rate = parseFloat(document.getElementById('debt2Rate').value) || 0;
+        const debt2Emi = parseFloat(document.getElementById('debt2Emi').value) || 0;
+
+        const goalCost = parseFloat(document.getElementById('goalCost').value) || 0;
+        const goalMonths = parseFloat(document.getElementById('goalMonths').value) || 1;
+        const investments = parseFloat(document.getElementById('investments').value) || 0;
+
+        if (!principal || !annualRate || !tenureValue) { alert("Please complete the Home Loan section."); return; }
+
+        const tenureMonths = tenureType === 'years' ? (tenureValue * 12) : tenureValue;
+        const monthlyRate = (annualRate / 12) / 100;
+        const baseEmi = (principal * monthlyRate * Math.pow(1 + monthlyRate, tenureMonths)) / (Math.pow(1 + monthlyRate, tenureMonths) - 1);
+        const monthlyGoalSavings = goalCost / goalMonths;
+
+        const rowDebt2 = document.getElementById('row-debt2');
+        if(debt2Emi > 0) {
+            rowDebt2.style.display = 'flex';
+            document.getElementById('out-debt2').innerText = `- ₹ ${formatCurrency(debt2Emi)}`;
+        } else {
+            rowDebt2.style.display = 'none';
+        }
+
+        const totalOutflows = expenses + baseEmi + debt2Emi + monthlyGoalSavings + manualExtra + investments;
+        const finalLeftover = income - totalOutflows;
+
+        document.getElementById('out-income').innerText = `₹ ${formatCurrency(income)}`;
+        document.getElementById('out-expenses').innerText = `- ₹ ${formatCurrency(expenses)}`;
+        document.getElementById('out-emi').innerText = `- ₹ ${formatCurrency(baseEmi)}`;
+        document.getElementById('out-holiday').innerText = `- ₹ ${formatCurrency(monthlyGoalSavings)}`;
+        document.getElementById('out-extra').innerText = `- ₹ ${formatCurrency(manualExtra)}`;
+        document.getElementById('out-investments').innerText = `- ₹ ${formatCurrency(investments)}`;
+        
+        const leftoverEl = document.getElementById('out-leftover');
+        if (finalLeftover < 0) {
+            leftoverEl.innerText = `- ₹ ${formatCurrency(Math.abs(finalLeftover))} (DEFICIT!)`;
+            leftoverEl.style.color = 'var(--danger)';
+        } else {
+            leftoverEl.innerText = `₹ ${formatCurrency(finalLeftover)}`;
+            leftoverEl.style.color = 'var(--success)';
+        }
+
+        generateInsights(income, finalLeftover, expenseMode, manualExtra, principal, annualRate, tenureMonths, baseEmi, debt2Principal, debt2Rate);
+
+        let chartLabels = ['Start'], baseBalances = [principal], accBalances = [principal];
+        
+        let pBase = principal, totalInterestBase = 0, monthsBase = 0;
+        while (pBase > 0 && monthsBase < 600) {
+            let interestThisMonth = pBase * monthlyRate;
+            if (pBase + interestThisMonth <= baseEmi) {
+                totalInterestBase += interestThisMonth; pBase = 0;
+            } else {
+                totalInterestBase += interestThisMonth; pBase = (pBase + interestThisMonth) - baseEmi;
+            }
+            monthsBase++;
+            if (monthsBase % 12 === 0 || pBase === 0) {
+                chartLabels.push(pBase === 0 && monthsBase % 12 !== 0 ? `Yr ${(monthsBase/12).toFixed(1)}` : `Yr ${monthsBase/12}`);
+                baseBalances.push(pBase);
+            }
+        }
+
+        let pAcc = principal, totalInterestAcc = 0, monthsAcc = 0;
+        const totalMonthlyPayment = baseEmi + manualExtra;
+        
+        while (pAcc > 0 && monthsAcc < 600) {
+            let interestThisMonth = pAcc * monthlyRate;
+            if (pAcc + interestThisMonth <= totalMonthlyPayment) {
+                totalInterestAcc += interestThisMonth; pAcc = 0;
+            } else {
+                totalInterestAcc += interestThisMonth; pAcc = (pAcc + interestThisMonth) - totalMonthlyPayment;
+            }
+            monthsAcc++;
+            
+            if (monthsAcc % 12 === 0 && pAcc > 0) {
+                pAcc -= annualBonus;
+                if(pAcc < 0) pAcc = 0;
+            }
+
+            if (monthsAcc % 12 === 0 || pAcc === 0) accBalances.push(pAcc);
+        }
+        while (accBalances.length < baseBalances.length) accBalances.push(0);
+
+        const monthsSaved = monthsBase - monthsAcc;
+        document.getElementById('base-tenure').innerText = `${(monthsBase / 12).toFixed(1)} Yrs`;
+        document.getElementById('acc-tenure').innerText = `${(monthsAcc / 12).toFixed(1)} Yrs`;
+        document.getElementById('time-saved').innerText = `${(monthsSaved / 12).toFixed(1)} Yrs!`;
+        document.getElementById('money-saved').innerText = `₹ ${formatCurrency(totalInterestBase - totalInterestAcc)}`;
+        
+        document.getElementById('results').style.opacity = '1';
+        renderChart(chartLabels, baseBalances, accBalances);
+    }
+
+    function renderChart(labels, baseData, accData) {
+        const ctx = document.getElementById('loanChart').getContext('2d');
+        if (loanChartInstance) loanChartInstance.destroy();
+
+        loanChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    { label: 'Base Plan Balance (₹)', data: baseData, borderColor: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.1)', borderWidth: 2, tension: 0.3, fill: true },
+                    { label: 'Accelerated Balance (₹)', data: accData, borderColor: '#10b981', backgroundColor: 'rgba(16, 185, 129, 0.2)', borderWidth: 3, tension: 0.3, fill: true }
+                ]
+            },
+            options: {
+                responsive: true, maintainAspectRatio: false,
+                animation: { duration: 0 }, // ZERO animation ensures PDF captures a finished chart
+                interaction: { mode: 'index', intersect: false },
+                plugins: { legend: { position: 'top', labels: { color: '#1e293b' } } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: '#64748b', callback: function(value) { return '₹ ' + (value / 100000).toFixed(1) + 'L'; } }, grid: { color: '#f1f5f9' } },
+                    x: { ticks: { color: '#64748b' }, grid: { display: false } }
+                }
+            }
+        });
+    }
+
+    function shareViaWhatsApp() {
+        const timeSaved = document.getElementById('time-saved').innerText;
+        if(timeSaved === "--") return alert("Please run the Financial Engine first!");
+        const moneySaved = document.getElementById('money-saved').innerText;
+        const leftover = document.getElementById('out-leftover').innerText;
+        const text = `Our Financial Blueprint 🚀\n\nBy strategically managing our cash flow and prepayments, we are going to save *${moneySaved}* in interest and finish our home loan *${timeSaved} early*!\n\nEven after all expenses, EMIs, and holiday savings, we still have *${leftover}* leftover cash in hand every month.\n\nLet's review this together!`;
+        window.open('https://wa.me/?text=' + encodeURIComponent(text), '_blank');
+    }
+
+    // --- BULLETPROOF PDF GENERATOR ---
+    function downloadPDF() {
+        const element = document.getElementById('results');
+        
+        if (element.style.opacity === '0.5') {
+            alert("Please run the Financial Engine first before downloading the PDF!");
+            return;
+        }
+
+        // CRITICAL FIX 1: Scroll to the absolute top of the page before generating. 
+        // If the user has scrolled down, HTML2PDF captures empty space at the top.
+        window.scrollTo(0, 0);
+
+        // Hide the buttons so they don't look weird on the printed PDF
+        const exportButtons = document.getElementById('export-buttons');
+        exportButtons.style.display = 'none';
+
+        // CRITICAL FIX 2: Swap the Canvas for a static Image.
+        // Canvas elements often go blank during PDF generation. We extract the exact pixels
+        // of the chart, inject them into an <img> tag, and hide the interactive canvas.
+        const canvasElement = document.getElementById('loanChart');
+        const imgElement = document.getElementById('pdf-chart-img');
+        
+        imgElement.src = canvasElement.toDataURL("image/png", 1.0);
+        canvasElement.style.display = 'none';
+        imgElement.style.display = 'block';
+
+        // Explicitly set background color inline to prevent dark mode transparency issues
+        const originalBg = element.style.backgroundColor;
+        element.style.backgroundColor = '#1e293b';
+
+        // Configure the PDF layout
+        const opt = {
+            margin:       10,
+            filename:     'Financial_Blueprint.pdf',
+            image:        { type: 'jpeg', quality: 1.0 },
+            html2canvas:  { scale: 2, useCORS: true, scrollX: 0, scrollY: 0 },
+            jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+
+        // Generate the PDF and immediately restore the UI
+        html2pdf().set(opt).from(element).save().then(() => {
+            exportButtons.style.display = 'flex';
+            element.style.backgroundColor = originalBg;
+            imgElement.style.display = 'none';
+            canvasElement.style.display = 'block';
+        });
+    }
+
+    window.onload = runFinancialEngine;
+</script>
+</body>
+</html>
